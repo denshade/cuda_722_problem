@@ -4,16 +4,16 @@
 
 #include <stdio.h>
 
-cudaError_t addWithCuda(int *results, const int *n, unsigned int size);
+cudaError_t addWithCuda(double *results, const int *n, unsigned int size);
 
-__global__ void sigma(int* results, const int* n) {
+__global__ void sigma(double* results, const int* n) {
     int k = blockDim.x * blockIdx.x + threadIdx.x ;
     int nk = n[k];
-    int sum = 0;
+    double sum = 0;
     for (int div = 1; div <= nk; div++) {
         if (nk % div == 0) {
             sum += div;
-        }        
+        }
     }
     results[k] = sum;
 }
@@ -22,7 +22,7 @@ int main()
 {
     const int arraySize = 512;
     int n[arraySize];
-    int results[arraySize];
+    double results[arraySize];
     for (int i = 0; i < arraySize; i++) {
         n[i] = i + 1;
     }
@@ -34,7 +34,7 @@ int main()
         return 1;
     }
     for (int k = 0; k < arraySize; k++) {
-        printf("%d,%d\n",
+        printf("%d,%f\n",
             n[k], results[k]);
     }
 
@@ -51,10 +51,10 @@ int main()
 }
 
 // Helper function for using CUDA to add vectors in parallel.
-cudaError_t addWithCuda(int *results, const int *n, unsigned int size)
+cudaError_t addWithCuda(double *results, const int *n, unsigned int size)
 {
     int *dev_n = 0;
-    int *dev_results = 0;
+    double *dev_results = 0;
     cudaError_t cudaStatus;
 
     // Choose which GPU to run on, change this on a multi-GPU system.
@@ -71,7 +71,7 @@ cudaError_t addWithCuda(int *results, const int *n, unsigned int size)
         goto Error;
     }
 
-    cudaStatus = cudaMalloc((void**)&dev_results, size * sizeof(int));
+    cudaStatus = cudaMalloc((void**)&dev_results, size * sizeof(double));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
         goto Error;
@@ -103,7 +103,7 @@ cudaError_t addWithCuda(int *results, const int *n, unsigned int size)
     }
 
     // Copy output vector from GPU buffer to host memory.
-    cudaStatus = cudaMemcpy(results, dev_results, size * sizeof(int), cudaMemcpyDeviceToHost);
+    cudaStatus = cudaMemcpy(results, dev_results, size * sizeof(double), cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed!");
         goto Error;
